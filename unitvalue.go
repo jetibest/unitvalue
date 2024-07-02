@@ -237,7 +237,7 @@ func ParseUnit(s string) (*UnitValue, error) {
 		// store original Unit string (after one operation where the base units change, this Unit will be lost)
 		combined_uv.Unit = s
 		
-		return combined_uv, nil
+		return combined_uv.AsDefinition(), nil
 	}
 	
 	// quick look-up map of base units, custom units, and common combinations (for performance)
@@ -379,7 +379,7 @@ func ParseUnit(s string) (*UnitValue, error) {
 			return nil, err
 		}
 		v.Unit = prefix + v.Unit
-		return v.Multiply(Dimless.New(factor)), nil
+		return v.Multiply(Dimless.New(factor)).AsDefinition(), nil
 	}
 	
 	// power is only allowed if no further / or * exist
@@ -397,7 +397,11 @@ func ParseUnit(s string) (*UnitValue, error) {
 			return nil, err
 		}
 		u.Unit = fmt.Sprintf("%s^%g", u.Unit, power)
-		return u.Power(power)
+		res, err := u.Power(power)
+		if err != nil {
+			return nil, err
+		}
+		return res.AsDefinition(), nil
 		
 	} else if strings.HasSuffix(s, "2") || strings.HasSuffix(s, "²") { // e.g. "m2"
 		
@@ -407,7 +411,11 @@ func ParseUnit(s string) (*UnitValue, error) {
 		}
 		i += 1
 		u.Unit = fmt.Sprintf("%s^2", u.Unit)
-		return u.Power(2.0)
+		res, err := u.Power(2.0)
+		if err != nil {
+			return nil, err
+		}
+		return res.AsDefinition(), nil
 		
 	} else if strings.HasSuffix(s, "3") || strings.HasSuffix(s, "³") { // e.g. "m3"
 		
@@ -417,7 +425,11 @@ func ParseUnit(s string) (*UnitValue, error) {
 		}
 		i += 1
 		u.Unit = fmt.Sprintf("%s^3", u.Unit)
-		return u.Power(3.0)
+		res, err := u.Power(3.0)
+		if err != nil {
+			return nil, err
+		}
+		return res.AsDefinition(), nil
 	}
 	
 	// try to turn 'p' into '/' as it is common to write b/s as bps
