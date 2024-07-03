@@ -145,7 +145,7 @@ func FormatUnitDimensions(dims UnitDimensions) string {
 			if exp == 1 {
 				s += fmt.Sprintf("%s", dim)
 			} else {
-				s += fmt.Sprintf("%s^%g", dim, exp)
+				s += fmt.Sprintf("%s^%.16g", dim, exp)
 			}
 		}
 	}
@@ -162,7 +162,7 @@ func FormatUnitDimensions(dims UnitDimensions) string {
 			if exp == 1 {
 				s += fmt.Sprintf("%s", dim)
 			} else {
-				s += fmt.Sprintf("%s^%g", dim, exp)
+				s += fmt.Sprintf("%s^%.16g", dim, exp)
 			}
 		}
 	}
@@ -396,7 +396,7 @@ func ParseUnit(s string) (*UnitValue, error) {
 		if err != nil {
 			return nil, err
 		}
-		u.Unit = fmt.Sprintf("%s^%g", u.Unit, power)
+		u.Unit = fmt.Sprintf("%s^%.16g", u.Unit, power)
 		res, err := u.Power(power)
 		if err != nil {
 			return nil, err
@@ -613,7 +613,7 @@ func (uv *UnitValue) Format() string {
 		
 		cv, err := uv.GetValueInUnitString(uv.Unit)
 		if err == nil {
-			return fmt.Sprintf("%g %s", cv, uv.Unit)
+			return fmt.Sprintf("%.16g %s", cv, uv.Unit)
 		}
 	}
 	
@@ -629,7 +629,7 @@ func (uv *UnitValue) String() string {
 	
 	// don't print the value at all, if it's a UnitDefinition (so the Value is just used as a conversion factor, and not actually representing a real value)
 	if uv.Offset == nil {
-		s += fmt.Sprintf("%g", uv.Value)
+		s += fmt.Sprintf("%.16g", uv.Value)
 	}
 	
 	ustr := uv.FormatUnit()
@@ -693,7 +693,7 @@ func (uv *UnitValue) Power(x float64) (*UnitValue, error) {
 		// remember, °C^2 is not a valid unit, there is no such thing.. however, we'll allow any ^2 on unit definitions with a zero-offset
 		
 		if *uv.Offset != 0 {
-			return nil, fmt.Errorf("unsupported power (%g) for unit (%s)", x, uv.UnitString())
+			return nil, fmt.Errorf("unsupported power (%.16g) for unit (%s)", x, uv.UnitString())
 		} else {
 			// (K)^2 = K^2, the uv.Value is not the actual Value, this is a UnitDefinition, not a UnitValue!
 			
