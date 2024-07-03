@@ -607,7 +607,7 @@ func (uv *UnitValue) Format() string {
 	if uv.Unit != "" {
 		
 		// don't print the value at all, if it's a UnitDefinition (so the Value is just used as a conversion factor, and not actually representing a real value)
-		if uv.Offset == nil {
+		if uv.Offset != nil {
 			return uv.Unit
 		}
 		
