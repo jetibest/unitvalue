@@ -470,7 +470,7 @@ func (uv *UnitValue) AsDefinition() *UnitValue {
 }
 
 // true if any non-zero dimensions exist
-func (uv *UnitValue) HasUnit() bool {
+func (uv *UnitValue) HasUnitDimensions() bool {
 	
 	c := 0
 	for _, exp := range uv.Dimensions {
