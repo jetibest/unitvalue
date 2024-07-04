@@ -545,7 +545,10 @@ func (uv *UnitValue) Copy() *UnitValue {
 		newDims[k] = v
 	}
 	
-	newOffset := *uv.Offset
+	newOffset := 0.0
+	if uv.Offset != nil {
+		newOffset = *uv.Offset
+	}
 	
 	return &UnitValue{
 		Value: uv.Value,
