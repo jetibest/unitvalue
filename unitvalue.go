@@ -171,6 +171,25 @@ func FormatUnitDimensions(dims UnitDimensions) string {
 	return s
 }
 
+// expects a float parseable value, with some optional unit behind it
+func Parse(s string) (*UnitValue, error) {
+	
+	var v float64
+	var u string
+	n, err := fmt.Sscanf(s, "%f%s", &v, &u)
+	if err != nil {
+		if n == 1 {
+			// the unit is empty
+			u = ""
+		} else {
+			return nil, err
+		}
+	}
+	u = strings.TrimSpace(u)
+	
+	return ParseUnitWithValue(v, u)
+}
+
 func ParseUnitWithValue(v float64, s string) (*UnitValue, error) {
 	
 	uv, err := ParseUnit(s)
