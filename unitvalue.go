@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 	"math"
+	"unicode"
+	"golang.org/x/exp/utf8string"
 )
 
 // note: UnitValue is also a UnitDefinition, in which case uv.Offset != nil, at that time, the uv.Value is only used for conversion (in combination with uv.Offset)
@@ -266,128 +268,92 @@ func ParseUnit(s string) (*UnitValue, error) {
 		return uv, nil
 	}
 	
+	utf8str := utf8string.NewString(s)
+	rc := utf8str.RuneCount()
+	
 	// handle most common prefixes (both Mi for Byte and M for SI)
 	var factor float64 = 1
 	prefix := ""
 	
-	if len(s) > 1 {
+	if rc > 1 {
 		
-		if len(s) > 2 {
-			if strings.HasPrefix(s, "Ki") {
-				
-				prefix = s[:2]
-				s = s[len(prefix):]
-				factor = 1024
-				
-			} else if strings.HasPrefix(s, "Mi") {
-				
-				prefix = s[:2]
-				s = s[len(prefix):]
-				factor = 1024 * 1024
-				
-			} else if strings.HasPrefix(s, "Gi") {
-				
-				prefix = s[:2]
-				s = s[len(prefix):]
-				factor = 1024 * 1024 * 1024
+		// NOTE: checking utf8next because if we have "m^2" or "m2" then "m" should not be considered a prefix because there is no letter following it, and thus must be interpreted as meter
+		// however, if mm^2, then the first m is milli, and the second is the meter
+		
+		if rc > 2 {
+			utf8prefix := utf8str.Slice(0, 2)
+			utf8next := utf8str.At(2)
 			
-			} else if strings.HasPrefix(s, "Ti") {
+			if unicode.IsLetter(rune(utf8next)) {
 				
-				prefix = s[:2]
-				s = s[len(prefix):]
-				factor = 1024 * 1024 * 1024 * 1024
-			
-			} else if strings.HasPrefix(s, "Pi") {
+				switch utf8prefix {
+					case "Ki":
+						factor = 1024
+					case "Mi":
+						factor = 1024 * 1024
+					case "Gi":
+						factor = 1024 * 1024 * 1024
+					case "Ti":
+						factor = 1024 * 1024 * 1024 * 1024
+					case "Pi":
+						factor = 1024 * 1024 * 1024 * 1024 * 1024
+					case "Ei":
+						factor = 1024 * 1024 * 1024 * 1024 * 1024 * 1024
+					case "da":
+						factor = 1e1
+					case "µ":
+						factor = 1e-6
+				}
 				
-				prefix = s[:2]
-				s = s[len(prefix):]
-				factor = 1024 * 1024 * 1024 * 1024 * 1024
-				
-			} else if strings.HasPrefix(s, "Ei") {
-				
-				prefix = s[:2]
-				s = s[len(prefix):]
-				factor = 1024 * 1024 * 1024 * 1024 * 1024 * 1024
+				// update values
+				if factor != 1 {
+					prefix = utf8prefix
+					s = s[len(prefix):]
+					utf8str = utf8string.NewString(s)
+					rc = utf8str.RuneCount()
+				}
 			}
 		}
+		// if not yet trimmed a prefix
 		if factor == 1 {
-			if strings.HasPrefix(s, "n") {
-				
-				prefix = s[:1]
-				s = s[len(prefix):]
-				factor = 1e-9
-				
-			} else if strings.HasPrefix(s, "µ") {
-				
-				prefix = s[:2]
-				s = s[len(prefix):]
-				factor = 1e-6
-				
-			} else if strings.HasPrefix(s, "m") {
-				
-				prefix = s[:1]
-				s = s[len(prefix):]
-				factor = 1e-3
-				
-			} else if strings.HasPrefix(s, "c") {
-				
-				prefix = s[:1]
-				s = s[len(prefix):]
-				factor = 1e-2
-				
-			} else if strings.HasPrefix(s, "d") {
-				
-				prefix = s[:1]
-				s = s[len(prefix):]
-				factor = 1e-1
 			
-			} else if strings.HasPrefix(s, "da") {
-				
-				prefix = s[:2]
-				s = s[len(prefix):]
-				factor = 1e1
+			utf8prefix := utf8str.Slice(0, 1)
+			utf8next := utf8str.At(1)
 			
-			} else if strings.HasPrefix(s, "h") {
+			if unicode.IsLetter(rune(utf8next)) {
 				
-				prefix = s[:1]
-				s = s[len(prefix):]
-				factor = 1e2
-			
-			} else if strings.HasPrefix(s, "k") {
+				switch utf8prefix {
+					case "n":
+						factor = 1e-9
+					case "m":
+						factor = 1e-3
+					case "c":
+						factor = 1e-2
+					case "d":
+						factor = 1e-1
+					case "h":
+						factor = 1e2
+					case "k":
+						factor = 1e3
+					case "M":
+						factor = 1e6
+					case "G":
+						factor = 1e9
+					case "T":
+						factor = 1e12
+					case "P":
+						factor = 1e15
+					case "E":
+						factor = 1e18
+				}
 				
-				prefix = s[:1]
-				s = s[len(prefix):]
-				factor = 1e3
-				
-			} else if strings.HasPrefix(s, "M") {
-				
-				prefix = s[:1]
-				s = s[len(prefix):]
-				factor = 1e6
-				
-			} else if strings.HasPrefix(s, "G") {
-				
-				prefix = s[:1]
-				s = s[len(prefix):]
-				factor = 1e9
-				
-			} else if strings.HasPrefix(s, "T") {
-				
-				prefix = s[:1]
-				s = s[len(prefix):]
-				factor = 1e12
-				
-			} else if strings.HasPrefix(s, "P") {
-				
-				prefix = s[:1]
-				s = s[len(prefix):]
-				factor = 1e15
-				
-			} else if strings.HasPrefix(s, "E") {
-				
-				prefix = s[:1]
-				s = s[len(prefix):]
-				factor = 1e18
+				if factor != 1 {
+					
+					prefix = utf8prefix
+					s = s[len(prefix):]
+					utf8str = utf8string.NewString(s)
+					rc = utf8str.RuneCount()
+				}
 			}
 		}
 	}
@@ -397,7 +363,7 @@ func ParseUnit(s string) (*UnitValue, error) {
 		if err != nil {
 			return nil, err
 		}
-		v.Unit = prefix + v.Unit
+		v.Unit = prefix + v.UnitString()
 		return v.Multiply(Dimless.New(factor)).AsDefinition(), nil
 	}
 	
