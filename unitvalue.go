@@ -16,6 +16,11 @@ var (
 	// without dimensions
 	Dimless = NewUnitDefinition(1, 0, UnitDimensions{})
 	Percent = NewUnitDefinition(0.01, 0, UnitDimensions{})
+	PartsPerCentMille = NewUnitDefinition(0.00001, 0, UnitDimensions{})
+	PartsPerMillion = NewUnitDefinition(0.000001, 0, UnitDimensions{})
+	PartsPerBillion = NewUnitDefinition(0.000000001, 0, UnitDimensions{})
+	PartsPerTrillion = NewUnitDefinition(0.000000000001, 0, UnitDimensions{})
+	PartsPerQuadrillion = NewUnitDefinition(0.000000000000001, 0, UnitDimensions{})
 	
 	// scientific base units
 	Metre = NewUnitDefinition(1, 0, UnitDimensions{"m": 1})
@@ -70,6 +75,26 @@ var (
 var Units = map[string]*UnitValue{
 	"": Dimless,
 	"%": Percent,
+	"pcm": PartsPerCentMille,
+	"ppm": PartsPerMillion,
+	"ppb": PartsPerBillion,
+	"ppt": PartsPerTrillion,
+	"ppq": PartsPerQuadrillion,
+	
+	// NOTE: these units below, should be logarithmic in their mathematics, not just dimless, but should be based off of dB, but with the given logarithmic-unit properties
+	// factor of power, energy, or mass/time(-3) is typically factor=10, otherwise it's factor=20 (for amplitude quantities)
+	"dB": Dimless, // {base(refUnit): '', ref(refLevel): 1, refFactor: 20, factor: 10, type: 'generic'}
+	"dBV": Dimless, // {refUnit: 'V', refLevel: 1, refFactor: 20, factor: 20, type: 'voltage'}
+	"dBm": Dimless, // {refUnit: 'W', refLevel: 1e-3, refFactor: 10, factor: 10, type: 'power'}
+	"dBW": Dimless, // {refUnit: 'W', refLevel: 1, refFactor: 10, factor: 10, type: 'power'}
+	"dBA": Dimless, // {refUnit: 'Pa', refLevel: 20e-6, refFactor: 20, factor: 10, type: 'sound'}
+	"dBuV": Dimless, // {refUnit: 'V', refLevel: 1e-6, refFactor: 20, factor: 20, type: 'voltage'}
+	"pH": Dimless, // {refUnit: 'mol/L', refLevel: 1, refFactor: -1, factor: -1, type: 'acidity'}
+	
+	"CO2": Dimless,
+	"CO2e": Dimless,
+	"CO₂": Dimless,
+	"CO₂e": Dimless,
 	
 	"m": Metre,
 	"kg": Kilogram,
@@ -95,7 +120,9 @@ var Units = map[string]*UnitValue{
 	"VAr": VoltAmpere,
 	"ΔK": RelativeKelvin,
 	"°C": AbsoluteCelsius,
+	"℃": AbsoluteCelsius,
 	"Δ°C": RelativeCelsius,
+	"Δ℃": RelativeCelsius,
 	
 	"in": Inch,
 	"ft": Foot,
@@ -666,6 +693,10 @@ func (uv *UnitValue) MatchesUnit(x *UnitValue) bool {
 // do UnitValue to the power of a number, returns an error if UnitValue is a UnitDefinition unless the offset is zero in which case it is allowed
 func (uv *UnitValue) Power(x float64) (*UnitValue, error) {
 	
+	// if exponent x is a logarithmic unit, then we just apply the regular power, without considering x's unit, just using the number value
+	// if base is a logarithmic unit, then we convertToLinear(base) before power(), and then do convertFromLinear() after the power is done, and reapplying the unit of the base as it were
+	// similarly, with sqrt, abs, log10, etc. we convertToLinear, apply the function, and then convertFromLinear and reapply the unit (except for log10, we don't do convertFromLinear, and don't apply any unit anymore)
+	
 	newDims := UnitDimensions{}
 	
 	for dim, uv_exp := range uv.Dimensions {
@@ -703,6 +734,9 @@ func (uv *UnitValue) Power(x float64) (*UnitValue, error) {
 // applies Offset when a UnitDefinition is multiplied by a Dimless number for the first time
 // tries to preserve Unit on either UnitValue if present
 func multiply_unitvalues(x *UnitValue, y *UnitValue, op float64) *UnitValue {
+	
+	// when x and y are logarithmic units, that's an error.. but if one of them is, it's just a regular multiplier factor, where the number value is multiplied, and the unit remains intact
+	// however, when dividing x/y, and both are logarithmic, we actually return convertToLinear(x)/convertToLinear(y), as a dimless value
 	
 	newDims := UnitDimensions{}
 	
@@ -781,6 +815,14 @@ func multiply_unitvalues(x *UnitValue, y *UnitValue, op float64) *UnitValue {
 // tries to preserve Unit if present
 // unit dimensions must be exactly equal, with one exception, Δ is allowed as a prefix on a base-unit as a relative unit, in which case e.g. K + ΔK = K
 func add_unitvalues(x *UnitValue, y *UnitValue, op float64) (*UnitValue, error) {
+	
+	// if x and y are both log units
+	// if x.type is generic, then convert x to specific y's unit
+	// if y.type is generic, then convert y to specific x's unit
+	// if either x or y is type generic OR base and factor of both x and y are both equal, then we can succeed, otherwise incompatible logarithmic units
+	// the resulting unitvalue is convertFromLinear(convertToLinear(x) + convertToLinear(y), unit(x))
+	// where convertToLinear(x) = x.ref * pow(10, x.number / x.factor)
+	// where convertFromLinear(x, unit) = x.factor * log10(linearValue / x.ref)
 	
 	if x.Offset != nil || y.Offset != nil {
 		opstr := "+"
