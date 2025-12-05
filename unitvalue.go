@@ -352,6 +352,10 @@ func ParseUnit(s string) (*UnitValue, error) {
 				switch utf8prefix {
 					case "n":
 						factor = 1e-9
+					case "u":
+						factor = 1e-6
+					case "μ":
+						factor = 1e-6
 					case "m":
 						factor = 1e-3
 					case "c":
