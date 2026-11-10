@@ -2,6 +2,7 @@ package unitvalue
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"math"
@@ -70,6 +71,114 @@ var (
 	RelativeKelvin = NewUnitDefinition(1, 0, UnitDimensions{"ΔK": 1})
 	RelativeCelsius = RelativeKelvin
 	RelativeFahrenheit = NewUnitDefinition(1, 0, UnitDimensions{"ΔF": 1})
+	
+	// 'deg' for degrees is acceptable if the symbol cannot be easily entered
+	// '%' to 'percent' and superscripts to '^n', so the symbols below are chosen to match
+	
+	// temperature (Rankine is absolute: 0 °R = 0 K)
+	Rankine = NewUnitDefinition(5.0/9.0, 0, UnitDimensions{"K": 1})
+	
+	// time
+	Minute = NewUnitDefinition(60, 0, UnitDimensions{"s": 1})
+	Day = NewUnitDefinition(86400, 0, UnitDimensions{"s": 1})
+	Week = NewUnitDefinition(604800, 0, UnitDimensions{"s": 1})
+	Year = NewUnitDefinition(31557600, 0, UnitDimensions{"s": 1}) // 365.25 days
+	Month = NewUnitDefinition(31557600/12, 0, UnitDimensions{"s": 1})
+	Decade = NewUnitDefinition(315576000, 0, UnitDimensions{"s": 1})
+	Century = NewUnitDefinition(3155760000, 0, UnitDimensions{"s": 1})
+	Millennium = NewUnitDefinition(31557600000, 0, UnitDimensions{"s": 1})
+	
+	// mass and force
+	Tonne = NewUnitDefinition(1000, 0, UnitDimensions{"kg": 1})
+	Ton = NewUnitDefinition(907.18474, 0, UnitDimensions{"kg": 1})
+	PoundMass = NewUnitDefinition(0.45359237, 0, UnitDimensions{"kg": 1})
+	Ounce = NewUnitDefinition(0.028349523125, 0, UnitDimensions{"kg": 1})
+	Stone = NewUnitDefinition(6.35029318, 0, UnitDimensions{"kg": 1})
+	Grain = NewUnitDefinition(0.00006479891, 0, UnitDimensions{"kg": 1})
+	Dram = NewUnitDefinition(0.0017718451953125, 0, UnitDimensions{"kg": 1})
+	Hundredweight = NewUnitDefinition(45.359237, 0, UnitDimensions{"kg": 1})
+	KilogramForce = NewUnitDefinition(9.80665, 0, UnitDimensions{"kg": 1, "m": 1, "s": -2})
+	PoundForce = NewUnitDefinition(4.4482216152605, 0, UnitDimensions{"kg": 1, "m": 1, "s": -2})
+	Kip = NewUnitDefinition(4448.2216, 0, UnitDimensions{"kg": 1, "m": 1, "s": -2})
+	Dyne = NewUnitDefinition(0.00001, 0, UnitDimensions{"kg": 1, "m": 1, "s": -2})
+	
+	// length
+	Angstrom = NewUnitDefinition(1e-10, 0, UnitDimensions{"m": 1})
+	Mil = NewUnitDefinition(0.0000254, 0, UnitDimensions{"m": 1})
+	Link = NewUnitDefinition(0.201168, 0, UnitDimensions{"m": 1})
+	Chain = NewUnitDefinition(20.1168, 0, UnitDimensions{"m": 1})
+	Rod = NewUnitDefinition(5.0292, 0, UnitDimensions{"m": 1})
+	
+	// area
+	Hectare = NewUnitDefinition(10000, 0, UnitDimensions{"m": 2})
+	Acre = NewUnitDefinition(4046.86, 0, UnitDimensions{"m": 2})
+	SquareInch = NewUnitDefinition(0.00064516, 0, UnitDimensions{"m": 2})
+	SquareFeet = NewUnitDefinition(0.09290304, 0, UnitDimensions{"m": 2})
+	SquareYard = NewUnitDefinition(0.83612736, 0, UnitDimensions{"m": 2})
+	SquareMile = NewUnitDefinition(2589988.110336, 0, UnitDimensions{"m": 2})
+	SquareChain = NewUnitDefinition(404.6873, 0, UnitDimensions{"m": 2})
+	SquareRod = NewUnitDefinition(25.29295, 0, UnitDimensions{"m": 2})
+	SquareMil = NewUnitDefinition(6.4516e-10, 0, UnitDimensions{"m": 2})
+	
+	// volume
+	CubicCentimetre = NewUnitDefinition(1e-6, 0, UnitDimensions{"m": 3})
+	CubicInch = NewUnitDefinition(0.000016387064, 0, UnitDimensions{"m": 3})
+	CubicFeet = NewUnitDefinition(0.028316846592, 0, UnitDimensions{"m": 3})
+	CubicYard = NewUnitDefinition(0.764554857984, 0, UnitDimensions{"m": 3})
+	Gallon = NewUnitDefinition(0.003785412, 0, UnitDimensions{"m": 3})
+	Pint = NewUnitDefinition(0.0004731765, 0, UnitDimensions{"m": 3})
+	Quart = NewUnitDefinition(0.0009463529, 0, UnitDimensions{"m": 3})
+	Cup = NewUnitDefinition(0.0002365882, 0, UnitDimensions{"m": 3})
+	FluidOunce = NewUnitDefinition(0.00002957353, 0, UnitDimensions{"m": 3})
+	FluidDram = NewUnitDefinition(0.0000036966911, 0, UnitDimensions{"m": 3})
+	Gill = NewUnitDefinition(0.0001182941, 0, UnitDimensions{"m": 3})
+	Teaspoon = NewUnitDefinition(0.000005, 0, UnitDimensions{"m": 3})
+	Tablespoon = NewUnitDefinition(0.000015, 0, UnitDimensions{"m": 3})
+	Drop = NewUnitDefinition(5e-8, 0, UnitDimensions{"m": 3})
+	Minim = NewUnitDefinition(6.161152e-8, 0, UnitDimensions{"m": 3})
+	BeerBarrel = NewUnitDefinition(0.1173478, 0, UnitDimensions{"m": 3})
+	OilBarrel = NewUnitDefinition(0.1589873, 0, UnitDimensions{"m": 3})
+	Hogshead = NewUnitDefinition(0.238481, 0, UnitDimensions{"m": 3})
+	
+	// pressure
+	Pascal = NewUnitDefinition(1, 0, UnitDimensions{"kg": 1, "m": -1, "s": -2})
+	Bar = NewUnitDefinition(100000, 0, UnitDimensions{"kg": 1, "m": -1, "s": -2})
+	Atmosphere = NewUnitDefinition(101325, 0, UnitDimensions{"kg": 1, "m": -1, "s": -2})
+	PSI = NewUnitDefinition(6894.75729276459, 0, UnitDimensions{"kg": 1, "m": -1, "s": -2})
+	Torr = NewUnitDefinition(133.322, 0, UnitDimensions{"kg": 1, "m": -1, "s": -2})
+	MillimetreWater = NewUnitDefinition(9.80665, 0, UnitDimensions{"kg": 1, "m": -1, "s": -2})
+	CentimetreWater = NewUnitDefinition(98.0665, 0, UnitDimensions{"kg": 1, "m": -1, "s": -2})
+	
+	// energy and power
+	ElectronVolt = NewUnitDefinition(1.602176565e-19, 0, UnitDimensions{"kg": 1, "m": 2, "s": -2})
+	Erg = NewUnitDefinition(1e-7, 0, UnitDimensions{"kg": 1, "m": 2, "s": -2})
+	BritishThermalUnit = NewUnitDefinition(1055.05585262, 0, UnitDimensions{"kg": 1, "m": 2, "s": -2})
+	Horsepower = NewUnitDefinition(745.6998715386, 0, UnitDimensions{"kg": 1, "m": 2, "s": -3})
+	
+	// electrical
+	Ohm = NewUnitDefinition(1, 0, UnitDimensions{"kg": 1, "m": 2, "s": -3, "A": -2})
+	Siemens = NewUnitDefinition(1, 0, UnitDimensions{"kg": -1, "m": -2, "s": 3, "A": 2})
+	Farad = NewUnitDefinition(1, 0, UnitDimensions{"kg": -1, "m": -2, "s": 4, "A": 2})
+	Henry = NewUnitDefinition(1, 0, UnitDimensions{"kg": 1, "m": 2, "s": -2, "A": -2})
+	Tesla = NewUnitDefinition(1, 0, UnitDimensions{"kg": 1, "s": -2, "A": -1})
+	Weber = NewUnitDefinition(1, 0, UnitDimensions{"kg": 1, "m": 2, "s": -2, "A": -1})
+	
+	// angle (dimensionless in this library, like Radian and Degree)
+	Gradian = NewUnitDefinition(math.Pi / 200, 0, UnitDimensions{"m": 1-1})
+	Arcminute = NewUnitDefinition(math.Pi / 10800, 0, UnitDimensions{"m": 1-1})
+	Arcsecond = NewUnitDefinition(math.Pi / 648000, 0, UnitDimensions{"m": 1-1})
+	Cycle = NewUnitDefinition(2*math.Pi, 0, UnitDimensions{"m": 1-1})
+	
+	// apparent/reactive energy (used by modbus drivers such as 'kVArh')
+	VoltAmpereHour = NewUnitDefinition(3600, 0, UnitDimensions{"kg": 1, "m": 2, "s": -2})
+	
+	// currencies, each its own dimension (no exchange rates are applied, like EUR above)
+	USD = NewUnitDefinition(1, 0, UnitDimensions{"USD": 1})
+	GBP = NewUnitDefinition(1, 0, UnitDimensions{"GBP": 1})
+	JPY = NewUnitDefinition(1, 0, UnitDimensions{"JPY": 1})
+	CHF = NewUnitDefinition(1, 0, UnitDimensions{"CHF": 1})
+	CAD = NewUnitDefinition(1, 0, UnitDimensions{"CAD": 1})
+	AUD = NewUnitDefinition(1, 0, UnitDimensions{"AUD": 1})
 )
 
 var Units = map[string]*UnitValue{
@@ -134,13 +243,294 @@ var Units = map[string]*UnitValue{
 	"Bps": Byte.Divide(Second).AsDefinition(),
 	"bps": Bit.Divide(Second).AsDefinition(),
 	"bit": Bit,
+	"b": Bit, // here 'b' is a bit (not a barn)
+	"byte": Byte,
+	"bytes": Byte,
 	"EUR": Euro,
+	"euro": Euro,
+	"euros": Euro,
+	"€": Euro,
+	"USD": USD,
+	"dollar": USD,
+	"dollars": USD,
+	"US$": USD,
+	"$": USD,
+	"GBP": GBP,
+	"pound": GBP,
+	"pounds": GBP,
+	"poundsterling": GBP,
+	"£": GBP,
+	"JPY": JPY,
+	"yen": JPY,
+	"¥": JPY,
+	"CHF": CHF,
+	"swissfranc": CHF,
+	"swissfrancs": CHF,
+	"CAD": CAD,
+	"canadiandollar": CAD,
+	"canadiandollars": CAD,
+	"C$": CAD,
+	"AUD": AUD,
+	"australiandollar": AUD,
+	"australiandollars": AUD,
+	"A$": AUD,
 	"rad": Radian,
+	"radian": Radian,
+	"radians": Radian,
 	"sr": Steradian,
+	"steradian": Steradian,
 	"lm": Lumen,
+	"lumen": Lumen,
+	"lumens": Lumen,
 	"lx": Lux,
+	"lux": Lux,
 	"deg": Degree,
 	"°": Degree,
+	"degree": Degree,
+	"degrees": Degree,
+	"grad": Gradian,
+	"gradian": Gradian,
+	"gradians": Gradian,
+	"arcmin": Arcminute,
+	"arcminute": Arcminute,
+	"arcminutes": Arcminute,
+	"arcsec": Arcsecond,
+	"arcsecond": Arcsecond,
+	"arcseconds": Arcsecond,
+	"cycle": Cycle,
+	"cycles": Cycle,
+	"okta": Dimless,
+	
+	"kelvin": AbsoluteKelvin,
+	"degC": AbsoluteCelsius,
+	"celsius": AbsoluteCelsius,
+	"degF": AbsoluteFahrenheit,
+	"°F": AbsoluteFahrenheit,
+	"fahrenheit": AbsoluteFahrenheit,
+	"degR": Rankine,
+	"°R": Rankine,
+	"rankine": Rankine,
+	"Δ°F": RelativeFahrenheit,
+	"percent": Percent,
+	
+	// time
+	"sec": Second,
+	"secs": Second,
+	"second": Second,
+	"seconds": Second,
+	"min": Minute,
+	"mins": Minute,
+	"minute": Minute,
+	"minutes": Minute,
+	"d": Day,
+	"day": Day,
+	"days": Day,
+	"week": Week,
+	"weeks": Week,
+	"month": Month,
+	"months": Month,
+	"year": Year,
+	"years": Year,
+	"decade": Decade,
+	"decades": Decade,
+	"century": Century,
+	"centuries": Century,
+	"millennium": Millennium,
+	"millennia": Millennium,
+	"hour": Hour,
+	"hours": Hour,
+	"hr": Hour,
+	"hrs": Hour,
+	
+	// mass and force
+	"tonne": Tonne,
+	"tonnes": Tonne,
+	"t": Tonne,
+	"ton": Ton,
+	"tons": Ton,
+	"lb": PoundMass,
+	"lbs": PoundMass,
+	"lbm": PoundMass,
+	"poundmass": PoundMass,
+	"poundmasses": PoundMass,
+	"oz": Ounce,
+	"ounce": Ounce,
+	"ounces": Ounce,
+	"stone": Stone,
+	"gr": Grain,
+	"grain": Grain,
+	"grains": Grain,
+	"dr": Dram,
+	"dram": Dram,
+	"drams": Dram,
+	"cwt": Hundredweight,
+	"hundredweight": Hundredweight,
+	"hundredweights": Hundredweight,
+	"kgf": KilogramForce,
+	"kilogramforce": KilogramForce,
+	"lbf": PoundForce,
+	"poundforce": PoundForce,
+	"kip": Kip,
+	"kips": Kip,
+	"dyn": Dyne,
+	"dyne": Dyne,
+	
+	// length
+	"angstrom": Angstrom,
+	"angstroms": Angstrom,
+	"mil": Mil,
+	"inch": Inch,
+	"inches": Inch,
+	"foot": Foot,
+	"feet": Foot,
+	"yard": Yard,
+	"yards": Yard,
+	"mile": Mile,
+	"miles": Mile,
+	"li": Link,
+	"link": Link,
+	"links": Link,
+	"ch": Chain,
+	"chain": Chain,
+	"chains": Chain,
+	"rd": Rod,
+	"rod": Rod,
+	"rods": Rod,
+	
+	// area
+	"hectare": Hectare,
+	"hectares": Hectare,
+	"ha": Hectare,
+	"acre": Acre,
+	"acres": Acre,
+	"sqin": SquareInch,
+	"sqft": SquareFeet,
+	"sqfeet": SquareFeet,
+	"sqyd": SquareYard,
+	"sqyard": SquareYard,
+	"sqmi": SquareMile,
+	"sqmile": SquareMile,
+	"sqmiles": SquareMile,
+	"sqch": SquareChain,
+	"sqrd": SquareRod,
+	"sqmil": SquareMil,
+	
+	// volume
+	"cc": CubicCentimetre,
+	"cuin": CubicInch,
+	"cuft": CubicFeet,
+	"cuyd": CubicYard,
+	"gal": Gallon,
+	"gallon": Gallon,
+	"gallons": Gallon,
+	"pt": Pint,
+	"pint": Pint,
+	"pints": Pint,
+	"qt": Quart,
+	"quart": Quart,
+	"quarts": Quart,
+	"cup": Cup,
+	"cups": Cup,
+	"floz": FluidOunce,
+	"fluidounce": FluidOunce,
+	"fluidounces": FluidOunce,
+	"fldr": FluidDram,
+	"fluiddram": FluidDram,
+	"fluiddrams": FluidDram,
+	"gi": Gill,
+	"gill": Gill,
+	"gills": Gill,
+	"teaspoon": Teaspoon,
+	"teaspoons": Teaspoon,
+	"tablespoon": Tablespoon,
+	"tablespoons": Tablespoon,
+	"drop": Drop,
+	"gtt": Drop,
+	"gtts": Drop,
+	"minim": Minim,
+	"minims": Minim,
+	"bbl": BeerBarrel,
+	"beerbarrel": BeerBarrel,
+	"beerbarrels": BeerBarrel,
+	"obl": OilBarrel,
+	"oilbarrel": OilBarrel,
+	"oilbarrels": OilBarrel,
+	"hogshead": Hogshead,
+	"hogsheads": Hogshead,
+	"liter": Litre,
+	"liters": Litre,
+	"litre": Litre,
+	"litres": Litre,
+	"lt": Litre,
+	
+	// pressure
+	"Pa": Pascal,
+	"pascal": Pascal,
+	"pascals": Pascal,
+	"bar": Bar,
+	"atm": Atmosphere,
+	"psi": PSI,
+	"torr": Torr,
+	"mmHg": Torr,
+	"mmhg": Torr,
+	"mmH2O": MillimetreWater,
+	"mmh2o": MillimetreWater,
+	"cmH2O": CentimetreWater,
+	"cmh2o": CentimetreWater,
+	
+	// energy and power
+	"eV": ElectronVolt,
+	"electronvolt": ElectronVolt,
+	"electronvolts": ElectronVolt,
+	"erg": Erg,
+	"BTU": BritishThermalUnit,
+	"BTUs": BritishThermalUnit,
+	"hp": Horsepower,
+	
+	// electrical
+	"ohm": Ohm,
+	"ohms": Ohm,
+	"Ω": Ohm,
+	"S": Siemens,
+	"siemens": Siemens,
+	"F": Farad,
+	"farad": Farad,
+	"farads": Farad,
+	"H": Henry,
+	"henry": Henry,
+	"T": Tesla,
+	"tesla": Tesla,
+	"teslas": Tesla,
+	"Wb": Weber,
+	"weber": Weber,
+	"webers": Weber,
+	"coulomb": Coulomb,
+	"coulombs": Coulomb,
+	"volt": Voltage,
+	"volts": Voltage,
+	"watt": Watt,
+	"watts": Watt,
+	"joule": Joule,
+	"joules": Joule,
+	"newton": Newton,
+	"hertz": Hertz,
+	"meter": Metre,
+	"meters": Metre,
+	"metre": Metre,
+	"gram": Gram,
+	"grams": Gram,
+	"mole": Mole,
+	"moles": Mole,
+	"candela": Candela,
+	"ampere": Ampere,
+	"amperes": Ampere,
+	"amps": Ampere,
+	"amp": Ampere,
+	
+	// apparent/reactive energy (used by modbus drivers such as 'kVArh')
+	"VAh": VoltAmpereHour,
+	"varh": VoltAmpereHour,
+	"VArh": VoltAmpereHour,
 }
 
 type UnitDimensions = map[string]float64
@@ -160,42 +550,52 @@ func NewUnitDefinition(slope float64, bias float64, dims UnitDimensions) *UnitVa
 func FormatUnitDimensions(dims UnitDimensions) string {
 	
 	// return a unit representation in the highest known order
-	s := ""
-	
-	// first handle the positive ones
+	//
+	// NOTE: the dimensions are collected and sorted first, because iterating a Go map
+	// yields a random order, which made the same dimensions format to a different string
+	// on every call (breaking string-based dimension comparisons in consumers)
+	pos := []string{}
+	neg := []string{}
 	for dim, exp := range dims {
 		
 		if exp > 0 {
-			
-			if len(s) != 0 {
-				s += "*"
-			}
-			
-			if exp == 1 {
-				s += fmt.Sprintf("%s", dim)
-			} else {
-				s += fmt.Sprintf("%s^%.16g", dim, exp)
-			}
+			pos = append(pos, dim)
+		} else if exp < 0 {
+			neg = append(neg, dim)
 		}
+		// ignore if equal to 0
 	}
-	// then the negative ones
-	for dim, exp := range dims {
+	sort.Strings(pos)
+	sort.Strings(neg)
+	
+	s := ""
+	
+	for _, dim := range pos {
 		
-		if exp < 0 {
-			
-			if len(s) != 0 {
-				s += "/"
-				exp = exp * -1
-			}
-			
-			if exp == 1 {
-				s += fmt.Sprintf("%s", dim)
-			} else {
-				s += fmt.Sprintf("%s^%.16g", dim, exp)
-			}
+		if len(s) != 0 {
+			s += "*"
+		}
+		
+		if exp := dims[dim]; exp == 1 {
+			s += fmt.Sprintf("%s", dim)
+		} else {
+			s += fmt.Sprintf("%s^%.16g", dim, exp)
 		}
 	}
-	// ignore if equal to 0
+	// then the negative ones, with the negative exponent kept explicit, so that for
+	// instance Hz (1/s) and s (seconds) never format to the same string
+	for _, dim := range neg {
+		
+		if len(s) != 0 {
+			s += "*"
+		}
+		
+		if exp := dims[dim]; exp == -1 {
+			s += fmt.Sprintf("%s^-1", dim)
+		} else {
+			s += fmt.Sprintf("%s^%.16g", dim, dims[dim])
+		}
+	}
 	
 	return s
 }
